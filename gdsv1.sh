@@ -65,6 +65,7 @@ RUN mkdir -p /run/php && \\
 RUN echo '#!/bin/sh' > /start.sh && \
     echo 'mkdir -p /run/php' >> /start.sh && \
     echo 'if [ ! -f /usr/local/bin/php-fpm ]; then ln -s /usr/sbin/php-fpm8.2 /usr/local/bin/php-fpm; fi' >> /start.sh && \
+    ln -sf /run/php/php8.2-fpm.sock /run/php/php-fpm.sock
     echo 'php-fpm' >> /start.sh && \
     echo 'exec nginx -g "daemon off;"' >> /start.sh && \
     chmod +x /start.sh
