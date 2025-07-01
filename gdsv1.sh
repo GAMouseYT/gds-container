@@ -1,6 +1,4 @@
 #!/bin/sh
-#gdsv1.sh
-#v1.0
 
 # Get directory of script
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -10,7 +8,7 @@ GDS_DIR="$SCRIPT_DIR/gdsv1"
 mkdir -p "$GDS_DIR"
 
 # Create directories for sharing
-mkdir -p "$GDS_DIR/home"
+mkdir -p "$GDS_DIR/root"
 mkdir -p "$GDS_DIR/html"
 
 # Create simple index.html
@@ -61,15 +59,14 @@ RUN mkdir -p /run/php && \\
 }\\n' > /etc/nginx/sites-available/default && \\
     ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
-# Add startup script
 RUN echo '#!/bin/sh' > /start.sh && \
     echo 'mkdir -p /run/php' >> /start.sh && \
     echo 'if [ ! -f /usr/local/bin/php-fpm ]; then ln -s /usr/sbin/php-fpm8.2 /usr/local/bin/php-fpm; fi' >> /start.sh && \
-    ln -sf /run/php/php8.2-fpm.sock /run/php/php-fpm.sock
+    echo 'ln -sf /run/php/php8.2-fpm.sock /run/php/php-fpm.sock' >> /start.sh && \
     echo 'php-fpm' >> /start.sh && \
+    echo 'ttyd --writable bash &' >> /start.sh && \
     echo 'exec nginx -g "daemon off;"' >> /start.sh && \
     chmod +x /start.sh
-
 
 EXPOSE 80 3000
 CMD ["/start.sh"]
@@ -82,9 +79,10 @@ docker build -t gdsv1 "$GDS_DIR"
 docker rm -f gdsv1 2>/dev/null
 
 # Run the container with volume and port forwarding
-docker run --name gdsv1 \
+docker run -d --restart=unless-stopped --name gdsv1 \
+  --hostname gdsv1 \
   -v "$GDS_DIR":/srv \
-  -v "$GDS_DIR/home":/home \
+  -v "$GDS_DIR/root":/root \
   -v "$GDS_DIR/html":/var/www/html \
   -v /root/deb-cache:/var/cache/apt/archives \
   -p 8080:80 \
@@ -96,8 +94,7 @@ docker run --name gdsv1 \
 # Print access info
 echo ""
 echo "Container 'gdsv1' started."
-echo "Services available at:"
+echo "Services:"
 echo "  - Nginx with PHP: http://localhost:8080"
-echo "  - Node.js apps: http://localhost:3000 (run node apps inside the container manually)"
-echo ""
-echo "Use 'docker exec -it gdsv1 bash' to enter the container shell."
+echo "  - Node.js apps: http://localhost:3000"
+echo "  - #SHELL -->  docker exec -it gdsv1 bash"
