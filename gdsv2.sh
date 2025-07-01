@@ -42,12 +42,14 @@ FROM debian:bookworm-slim
 # Prevent prompts during install
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and install packages
 RUN apt-get update && apt-get upgrade -y && \\
     apt-get install -y --no-install-recommends \\
     nano curl wget htop nginx php php-fpm php-cli php-curl php-mbstring php-xml \\
     nodejs npm bash && \\
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \\
+    curl -LO https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && \\
+    chmod +x ttyd.x86_64 && \\
+    mv ttyd.x86_64 /usr/local/bin/ttyd
 
 # Setup Nginx with PHP-FPM
 RUN mkdir -p /run/php && \\
